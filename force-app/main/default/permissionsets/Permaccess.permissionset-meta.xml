@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
-    <description>This PermissionSet gives CRUD access to admin on Book__c custom object.</description>
+    <description>This PermissionSet gives CRUD access to admin on Book__c Custom Object and its Tab.</description>
     <hasActivationRequired>false</hasActivationRequired>
     <label>PermissionSet to Admin</label>
     <objectPermissions>
