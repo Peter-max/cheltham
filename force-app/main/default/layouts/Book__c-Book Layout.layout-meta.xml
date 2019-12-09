@@ -23,6 +23,10 @@
                 <behavior>Edit</behavior>
                 <field>Genre__c</field>
             </layoutItems>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>Number_of_Available_Copies__c</field>
+            </layoutItems>
         </layoutColumns>
         <layoutColumns>
             <layoutItems>
