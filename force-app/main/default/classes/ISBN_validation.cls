@@ -14,11 +14,15 @@ public class ISBN_validation {
                                    
                 // This is checking whether the ISBN is made of only 13 digits
                 if(Pattern.matches('[0-9]{13}',singleBookISBNString)){
-                    Validator(singleBook, singleBookISBNString, 13);
+                    if(!Validator(singleBookISBNString)){
+                        singleBook.ISBN__c.addError('This is not a valid ISBN');
+                    }
                 }
                 // This is checking whether the ISBN is made of only 10 digits
-                else if(Pattern.matches('[0-9]{10}',singleBookISBNString)){
-                    Validator(singleBook, singleBookISBNString,10);
+                else if(Pattern.matches('[0-9]{9}[0-9X]',singleBookISBNString)){
+                    if(!Validator(singleBookISBNString)){
+                        singleBook.ISBN__c.addError('This is not a valid ISBN');
+                    }
                     singleBook.ISBN__c = ISBNConverter(singleBookISBNString);
                 }
                 // This part deals with invalid ISBNs
@@ -31,8 +35,13 @@ public class ISBN_validation {
     }
         
         
-    public static String CheckDigitGenerator(String partial_ISBN, Integer number_Of_ISBN_digits){
-        if(number_Of_ISBN_digits == 13){
+    public static String CheckDigitGenerator(String ISBN){        
+        // Removing the last digit from the ISBN
+        List<String> ISBNInDigits = ISBN.split('');
+        ISBNInDigits.remove(ISBN.length()-1);
+        ISBN = String.join(ISBNInDigits, '');
+        
+        if(ISBN.length() == 12){
             // It is the last digit predicted by the first 12 digits of any given 13 digit ISBN code
             Integer lastDigit = 0;
                     
@@ -40,7 +49,7 @@ public class ISBN_validation {
             Integer ISBN_weights_Index = 0;
                     
            // Use the split method to save string as list of its characters
-           for(String digits: partial_ISBN.split('')){
+           for(String digits: ISBN.split('')){
                
                // It is a formula that calculates the last digit of the ISBN code
                lastDigit  += Integer.valueOf(digits)* ThirteenISBN_weights[ISBN_weights_Index];
@@ -60,14 +69,17 @@ public class ISBN_validation {
             Integer ISBN_weights_Index = 0;
                 
             // Use the split method to save string as list of its characters
-            for(String digits: partial_ISBN.split('')){
+            for(String digits: ISBN.split('')){
                 // It is a formula that calculates the last digit of the ISBN code
                 lastDigit  += Integer.valueOf(digits)* TenISBN_weights[ISBN_weights_Index];
                 ISBN_weights_Index++;
             }
             //Calculating the ISBN's check digit  
             lastDigit = math.mod(11 - math.mod(lastDigit,11), 11 );
-                
+            
+            if(lastDigit == 10){
+                return 'X';
+            }
             return String.valueOf(lastDigit);
         }
     }
@@ -77,13 +89,11 @@ public class ISBN_validation {
     // This method converts a 10 digit ISBN to its corresponding 13 digit ISBN
     public static String ISBNConverter(String singleBookISBNString){
         List<String> listOfDigits = singleBookISBNString.split('');
-        listOfDigits.remove(singleBookISBNString.length()-1);
+        listOfDigits.add(0, '978');
         
-        listOfDigits.add(0, '8');
-        listOfDigits.add(0,'7');
-        listOfDigits.add(0, '9');
       
-        String expected_Check_digit = CheckDigitGenerator(String.join(listOfDigits,''), 13);
+        String expected_Check_digit = CheckDigitGenerator(String.join(listOfDigits,''));
+        listOfDigits.remove(singleBookISBNString.length()-1);
         listOfDigits.add(expected_Check_digit);
         
         return String.join(listOfDigits, '');
@@ -93,23 +103,24 @@ public class ISBN_validation {
     //////////////////////////////////////////////////////////////////////////////////////////
     
     // This class takes singleBook object in order to add an error if its ISBN is incorrect 
-    public static void Validator(Book__c singleBook, String singleBookISBNString, Integer number_Of_ISBN_digits){
+    public static Boolean Validator(String singleBookISBNString){
     
-        if(number_Of_ISBN_digits == 13){
-            String expected_Check_digit = CheckDigitGenerator(singleBookISBNString, 13);
+        if(singleBookISBNString.length() == 13){
+            String expected_Check_digit = CheckDigitGenerator(singleBookISBNString);
             
             // It is checking whether the predicted check digit matches the actual check digit of the ISBN
             if( expected_Check_digit != (singleBookISBNString.split(''))[singleBookISBNString.length()-1] ){
-                 singleBook.ISBN__c.addError('This is not a valid ISBN');
+                 return False;
             }
         }
         else{
-            String expected_Check_digit = CheckDigitGenerator(singleBookISBNString, 10);
+            String expected_Check_digit = CheckDigitGenerator(singleBookISBNString);
             
             // It is checking whether the predicted check digit matches the actual check digit of the ISBN
             if( expected_Check_digit != (singleBookISBNString.split(''))[singleBookISBNString.length()-1] ){
-                 singleBook.ISBN__c.addError('This is not a valid ISBN');
+                 return False;
             }
         }
+        return True;
     }
 }
